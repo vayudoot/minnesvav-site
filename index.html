@@ -1,0 +1,1216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Minnesväv — Memory Woven Local</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:           #070b18;
+      --bg-surface:   #0d1224;
+      --bg-card:      #111828;
+      --accent:       #00e8c0;
+      --accent-glow:  rgba(0, 232, 192, 0.12);
+      --accent-border:rgba(0, 232, 192, 0.28);
+      --purple:       #8b9de8;
+      --text:         #ede9dc;
+      --text-muted:   rgba(237, 233, 220, 0.52);
+      --text-faint:   rgba(237, 233, 220, 0.22);
+      --border:       rgba(255, 255, 255, 0.07);
+      --border-med:   rgba(255, 255, 255, 0.12);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Syne', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* Subtle grain overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+      opacity: 0.028;
+      pointer-events: none;
+      z-index: 9999;
+    }
+
+    /* ——————————————— NAV ——————————————— */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 200;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 3rem;
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(24px) saturate(1.4);
+      background: rgba(7, 11, 24, 0.72);
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      text-decoration: none;
+      color: var(--text);
+    }
+
+    .logo-mark { width: 34px; height: 34px; }
+
+    .logo-name {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.25rem;
+      font-weight: 600;
+      letter-spacing: 0.01em;
+    }
+
+    .nav-links {
+      list-style: none;
+      display: flex;
+      gap: 2.5rem;
+      align-items: center;
+    }
+
+    .nav-links a {
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: var(--text); }
+
+    .btn-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.3rem;
+      background: var(--accent);
+      color: #070b18;
+      font-family: 'Syne', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      border: none;
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-cta:hover { background: #fff; transform: translateY(-1px); }
+
+    .btn-ghost {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.55rem 1.3rem;
+      background: transparent;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-decoration: none;
+      border: 1px solid var(--border-med);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+
+    /* ——————————————— HERO ——————————————— */
+    .hero {
+      position: relative;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      padding: 8rem 3rem 10rem;
+      overflow: hidden;
+    }
+
+    #weave {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 760px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      padding: 0.3rem 0.85rem;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--accent);
+      letter-spacing: 0.08em;
+      margin-bottom: 2rem;
+      animation: fadeUp 0.7s ease forwards;
+    }
+
+    .tag-dot {
+      width: 5px; height: 5px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2.2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.35; transform: scale(0.7); }
+    }
+
+    .hero h1 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(3.2rem, 8vw, 6.2rem);
+      font-weight: 600;
+      line-height: 1.03;
+      letter-spacing: -0.015em;
+      margin-bottom: 1.75rem;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .hero h1 em {
+      font-style: italic;
+      color: var(--accent);
+    }
+
+    .hero-sub {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 530px;
+      line-height: 1.75;
+      margin-bottom: 2.75rem;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.32s ease both;
+    }
+
+    /* bottom stat bar */
+    .hero-stats {
+      position: absolute;
+      bottom: 0; left: 0; right: 0;
+      z-index: 2;
+      display: flex;
+      gap: 0;
+      border-top: 1px solid var(--border);
+      animation: fadeUp 0.7s 0.55s ease both;
+    }
+
+    .hero-stat {
+      flex: 1;
+      padding: 1.5rem 2.5rem;
+      border-right: 1px solid var(--border);
+    }
+    .hero-stat:last-child { border-right: none; }
+
+    .hs-val {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 2.2rem;
+      font-weight: 600;
+      color: var(--accent);
+      line-height: 1;
+      margin-bottom: 0.3rem;
+    }
+
+    .hs-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+    }
+
+    /* ——————————————— SHARED SECTION STYLES ——————————————— */
+    .section-inner {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 6rem 3rem;
+    }
+
+    .full-bleed { background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+
+    .sec-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 1rem;
+    }
+
+    .sec-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2rem, 4vw, 3.4rem);
+      font-weight: 600;
+      line-height: 1.12;
+      margin-bottom: 1.25rem;
+    }
+
+    .sec-sub {
+      font-size: 0.97rem;
+      color: var(--text-muted);
+      max-width: 560px;
+      line-height: 1.78;
+    }
+
+    /* ——————————————— PROBLEM ——————————————— */
+    .problem-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+
+    .problem-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2.25rem;
+    }
+
+    .problem-card.is-active {
+      border-color: var(--accent-border);
+      background: rgba(0, 232, 192, 0.04);
+    }
+
+    .pc-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 1rem;
+    }
+
+    .problem-card.is-active .pc-label { color: var(--accent); }
+
+    .problem-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.45rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+    }
+
+    .check-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.65rem;
+    }
+
+    .check-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.7rem;
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.55;
+    }
+
+    .check-list li .marker {
+      flex-shrink: 0;
+      margin-top: 2px;
+      color: var(--text-faint);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .problem-card.is-active .check-list li .marker { color: var(--accent); }
+
+    /* ——————————————— HOW IT WORKS ——————————————— */
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      margin-top: 4.5rem;
+      position: relative;
+    }
+
+    .steps-row::before {
+      content: '';
+      position: absolute;
+      top: 2.2rem;
+      left: calc(100% / 6);
+      right: calc(100% / 6);
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--accent-border), var(--accent), var(--accent-border), transparent);
+    }
+
+    .step {
+      padding: 0 2rem;
+      text-align: center;
+    }
+
+    .step:first-child { padding-left: 0; }
+    .step:last-child  { padding-right: 0; }
+
+    .step-num {
+      width: 44px; height: 44px;
+      margin: 0 auto 1.75rem;
+      border: 1px solid var(--accent-border);
+      background: var(--accent-glow);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--accent);
+    }
+
+    .step h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.3rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .step p {
+      font-size: 0.87rem;
+      color: var(--text-muted);
+      line-height: 1.68;
+    }
+
+    .code-pill {
+      margin-top: 1.25rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.68rem;
+      color: var(--text-muted);
+      text-align: left;
+      line-height: 1.7;
+    }
+
+    .code-pill .kw { color: var(--accent); }
+    .code-pill .cm { color: var(--text-faint); }
+
+    /* ——————————————— ARCHITECTURE ——————————————— */
+    .arch-box {
+      margin-top: 4rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 3rem;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .arch-box::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    }
+
+    .arch-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 0;
+    }
+
+    .arch-node {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      padding: 1.1rem 1.3rem;
+      min-width: 130px;
+      text-align: center;
+    }
+
+    .arch-node.highlight {
+      border-color: var(--accent-border);
+      background: var(--accent-glow);
+    }
+
+    .arch-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
+
+    .arch-micro {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--text-faint);
+      margin-bottom: 0.2rem;
+    }
+
+    .arch-node.highlight .arch-micro { color: var(--accent); opacity: 0.7; }
+
+    .arch-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .arch-arrow {
+      width: 48px;
+      height: 1px;
+      position: relative;
+      flex-shrink: 0;
+    }
+
+    .arch-arrow::after {
+      content: '›';
+      position: absolute;
+      right: -5px;
+      top: -11px;
+      font-size: 1.1rem;
+    }
+
+    .arch-arrow.dim  { background: var(--border); }
+    .arch-arrow.dim::after { color: var(--text-faint); }
+    .arch-arrow.glow { background: var(--accent); }
+    .arch-arrow.glow::after { color: var(--accent); }
+
+    .arch-meta {
+      margin-top: 2.25rem;
+      padding-top: 2rem;
+      border-top: 1px solid var(--border);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 2rem;
+      text-align: center;
+    }
+
+    .arch-meta-key {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.35rem;
+    }
+
+    .arch-meta-val {
+      font-size: 0.86rem;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* ——————————————— USE CASES ——————————————— */
+    .usecase-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1.5rem;
+      margin-top: 4rem;
+    }
+
+    .uc-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 2.25rem;
+      transition: border-color 0.22s;
+    }
+
+    .uc-card:hover { border-color: rgba(0, 232, 192, 0.22); }
+
+    .uc-industry {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 0.75rem;
+    }
+
+    .uc-card h3 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.35rem;
+      font-weight: 600;
+      margin-bottom: 0.75rem;
+    }
+
+    .uc-card p {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      line-height: 1.68;
+    }
+
+    .uc-metric {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+    }
+
+    /* ——————————————— PRICING ——————————————— */
+    .pricing-grid {
+      display: grid;
+      grid-template-columns: 1fr 1.3fr;
+      gap: 5rem;
+      margin-top: 4rem;
+      align-items: start;
+    }
+
+    .price-table {
+      background: var(--bg-card);
+      border: 1px solid var(--accent-border);
+      overflow: hidden;
+    }
+
+    .price-table-header {
+      padding: 1rem 1.5rem;
+      background: var(--accent-glow);
+      border-bottom: 1px solid var(--accent-border);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.66rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent);
+    }
+
+    .price-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.9rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.88rem;
+    }
+
+    .price-row:last-child { border-bottom: none; }
+    .price-row .pl { color: var(--text-muted); }
+    .price-row .pv { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent); }
+
+    .pricing-points {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 1.75rem;
+    }
+
+    .pp {
+      display: flex;
+      gap: 1.1rem;
+      align-items: flex-start;
+    }
+
+    .pp-icon {
+      width: 30px; height: 30px;
+      flex-shrink: 0;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent-border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      color: var(--accent);
+    }
+
+    .pp-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+    }
+
+    .pp-desc {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      line-height: 1.65;
+    }
+
+    /* ——————————————— CTA ——————————————— */
+    .cta-band {
+      text-align: center;
+      padding: 7rem 3rem;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .cta-band::before {
+      content: '';
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 800px; height: 400px;
+      background: radial-gradient(ellipse, rgba(0, 232, 192, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .cta-band h2 {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      font-weight: 600;
+      line-height: 1.1;
+      margin-bottom: 1.5rem;
+      position: relative;
+    }
+
+    .cta-band p {
+      font-size: 1rem;
+      color: var(--text-muted);
+      max-width: 440px;
+      margin: 0 auto 2.75rem;
+      line-height: 1.75;
+      position: relative;
+    }
+
+    .waitlist-row {
+      display: flex;
+      max-width: 400px;
+      margin: 0 auto;
+      position: relative;
+    }
+
+    .waitlist-input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      background: var(--bg-card);
+      border: 1px solid var(--border-med);
+      border-right: none;
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      font-size: 0.88rem;
+      outline: none;
+      transition: border-color 0.18s;
+    }
+
+    .waitlist-input::placeholder { color: var(--text-faint); }
+    .waitlist-input:focus { border-color: var(--accent-border); }
+
+    /* ——————————————— FOOTER ——————————————— */
+    footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 2rem 3rem;
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-l {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--text-faint);
+    }
+
+    .footer-r {
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 0.9rem;
+      color: var(--text-faint);
+      font-style: italic;
+    }
+
+    /* ——————————————— ANIMATIONS ——————————————— */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(18px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ——————————————— RESPONSIVE ——————————————— */
+    @media (max-width: 860px) {
+      nav { padding: 1rem 1.5rem; }
+      .nav-links { display: none; }
+      .hero { padding: 7rem 1.5rem 9rem; }
+      .section-inner { padding: 4rem 1.5rem; }
+      .problem-grid, .steps-row, .usecase-grid, .pricing-grid { grid-template-columns: 1fr; }
+      .steps-row::before { display: none; }
+      .step { padding: 0 0 2rem; text-align: left; }
+      .step-num { margin: 0 0 1.25rem; }
+      .hero-stats { display: none; }
+      .arch-flow { flex-direction: column; }
+      .arch-arrow { transform: rotate(90deg); }
+      .arch-meta { grid-template-columns: 1fr; gap: 1.25rem; }
+      .arch-box { padding: 1.75rem; }
+      .cta-band { padding: 4rem 1.5rem; }
+      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="logo">
+    <svg class="logo-mark" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <!-- Woven M letterform -->
+      <path d="M4 28 L4 8 L17 20 L30 8 L30 28" stroke="#00e8c0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <!-- Weave over-under threads -->
+      <path d="M4 16 L10.5 21.5" stroke="rgba(0,232,192,0.45)" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M30 16 L23.5 21.5" stroke="rgba(0,232,192,0.45)" stroke-width="1.4" stroke-linecap="round"/>
+      <path d="M13 22.5 L17 20 L21 22.5" stroke="rgba(0,232,192,0.25)" stroke-width="1" stroke-linecap="round"/>
+    </svg>
+    <span class="logo-name">Minnesväv</span>
+  </a>
+  <ul class="nav-links">
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#usecases">Use cases</a></li>
+    <li><a href="#pricing">Pricing</a></li>
+  </ul>
+  <a href="#waitlist" class="btn-cta">Early Access</a>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <canvas id="weave"></canvas>
+
+  <div class="hero-content">
+    <div class="tag">
+      <span class="tag-dot"></span>
+      Document-centric KV Cache
+    </div>
+    <h1>
+      Memory <em>woven</em><br>
+      into every document.
+    </h1>
+    <p class="hero-sub">
+      Prefill once. Query forever. Minnesväv caches your documents' full AI context locally — so every query is cheaper, faster, and never leaves your infrastructure.
+    </p>
+    <div class="hero-actions">
+      <a href="#waitlist" class="btn-cta">Join waitlist →</a>
+      <a href="#how" class="btn-ghost">How it works</a>
+    </div>
+  </div>
+
+  <div class="hero-stats">
+    <div class="hero-stat">
+      <div class="hs-val">~90%</div>
+      <div class="hs-label">Prefill cost reduction</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hs-val">1×</div>
+      <div class="hs-label">Prefill per document</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hs-val">0</div>
+      <div class="hs-label">Documents leave your infra</div>
+    </div>
+    <div class="hero-stat">
+      <div class="hs-val">∞</div>
+      <div class="hs-label">Queries served from cache</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROBLEM -->
+<div id="problem">
+  <div class="section-inner">
+    <div class="sec-label">The Problem</div>
+    <h2 class="sec-title">AI costs shouldn't be<br>a variable expense.</h2>
+    <p class="sec-sub">Every query against your internal documents re-processes the full context — a 200-page legal brief, a chip datasheet, a patient record. You pay full prefill cost every single time.</p>
+
+    <div class="problem-grid">
+      <div class="problem-card">
+        <div class="pc-label">Today's approach</div>
+        <h3>Query-centric inference</h3>
+        <ul class="check-list">
+          <li><span class="marker">—</span>Full document re-processed on every query</li>
+          <li><span class="marker">—</span>Cost scales with users × queries × doc size</li>
+          <li><span class="marker">—</span>Context sent to third-party API servers</li>
+          <li><span class="marker">—</span>Unpredictable monthly bills</li>
+          <li><span class="marker">—</span>No document-level ACL on cache access</li>
+          <li><span class="marker">—</span>Per-user or per-query caching strategies</li>
+        </ul>
+      </div>
+      <div class="problem-card is-active">
+        <div class="pc-label">With Minnesväv</div>
+        <h3>Document-centric caching</h3>
+        <ul class="check-list">
+          <li><span class="marker">✓</span>Document processed once — KV cache reused forever</li>
+          <li><span class="marker">✓</span>Cost scales with corpus size, not query volume</li>
+          <li><span class="marker">✓</span>KV cache stays entirely within your perimeter</li>
+          <li><span class="marker">✓</span>Predictable pricing: per document, per prefill</li>
+          <li><span class="marker">✓</span>Same ACL as your DMS, applied to the cache</li>
+          <li><span class="marker">✓</span>Document-first: one cache entry per document</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- HOW IT WORKS -->
+<div id="how" class="full-bleed">
+  <div class="section-inner">
+    <div class="sec-label">How it works</div>
+    <h2 class="sec-title">Prefill once.<br>Decode for every query.</h2>
+    <p class="sec-sub">LLM inference has two phases. We make prefill a one-time cost per document — not a per-query tax paid by every user, every time.</p>
+
+    <div class="steps-row">
+      <div class="step">
+        <div class="step-num">01</div>
+        <h3>Document materializes</h3>
+        <p>When a new document enters your DMS, Minnesväv runs prefill once — computing the full KV cache using your chosen open model, on your own hardware or private cloud.</p>
+        <div class="code-pill">
+          <span class="kw">prefill</span>(doc_id, model) → kv_cache<br>
+          <span class="cm">// cost: O(doc_tokens) — one time</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">02</div>
+        <h3>Cache lives locally</h3>
+        <p>The KV cache is stored in your own infrastructure — on-prem DRAM, edge SSDs, or your private cloud. It inherits the exact ACL of the source document. Nothing leaves your domain.</p>
+        <div class="code-pill">
+          <span class="kw">store</span>(kv_cache, acl=doc.permissions)<br>
+          <span class="cm">// location: your_infra_only</span>
+        </div>
+      </div>
+      <div class="step">
+        <div class="step-num">03</div>
+        <h3>Queries decode cheaply</h3>
+        <p>Every user query injects the cached context and runs only decode. No document re-processing — cost is proportional to the query alone, not the document that was already cached.</p>
+        <div class="code-pill">
+          <span class="kw">decode</span>(query, kv_ref=doc_id)<br>
+          <span class="cm">// cost: O(query_tokens) per query</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ARCHITECTURE -->
+<div id="arch">
+  <div class="section-inner">
+    <div class="sec-label">Architecture</div>
+    <h2 class="sec-title">Where the cache lives.</h2>
+    <p class="sec-sub">Minnesväv integrates with your DMS — EHR, SharePoint, Confluence, internal wikis. The cache store is fully within your perimeter. The model runs on cost-efficient open-weight inference.</p>
+
+    <div class="arch-box">
+      <div class="arch-flow">
+        <div class="arch-node">
+          <div class="arch-icon">📄</div>
+          <div class="arch-micro">Source</div>
+          <div class="arch-label">DMS / EHR</div>
+        </div>
+        <div class="arch-arrow glow"></div>
+        <div class="arch-node highlight">
+          <div class="arch-icon">🧵</div>
+          <div class="arch-micro">Prefill Engine</div>
+          <div class="arch-label">Open Model</div>
+        </div>
+        <div class="arch-arrow glow"></div>
+        <div class="arch-node highlight">
+          <div class="arch-icon">💾</div>
+          <div class="arch-micro">KV Cache Store</div>
+          <div class="arch-label">Your Infra</div>
+        </div>
+        <div class="arch-arrow dim"></div>
+        <div class="arch-node">
+          <div class="arch-icon">💬</div>
+          <div class="arch-micro">Decode Only</div>
+          <div class="arch-label">User Query</div>
+        </div>
+        <div class="arch-arrow dim"></div>
+        <div class="arch-node">
+          <div class="arch-icon">✦</div>
+          <div class="arch-micro">Response</div>
+          <div class="arch-label">Fast &amp; Cheap</div>
+        </div>
+      </div>
+      <div class="arch-meta">
+        <div>
+          <div class="arch-meta-key">Trigger</div>
+          <div class="arch-meta-val">Document create or update event</div>
+        </div>
+        <div>
+          <div class="arch-meta-key">Cache invalidation</div>
+          <div class="arch-meta-val">Only when document or model changes</div>
+        </div>
+        <div>
+          <div class="arch-meta-key">Access control</div>
+          <div class="arch-meta-val">Inherited from source document ACL</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- USE CASES -->
+<div id="usecases" class="full-bleed">
+  <div class="section-inner">
+    <div class="sec-label">Use Cases</div>
+    <h2 class="sec-title">Built for document-heavy industries.</h2>
+    <p class="sec-sub">Companies whose document corpus is stable and repeatedly queried see the highest ROI — where prefill-once translates directly to predictable, shrinking unit costs.</p>
+
+    <div class="usecase-grid">
+      <div class="uc-card">
+        <div class="uc-industry">Legal</div>
+        <h3>Law Firms &amp; Compliance</h3>
+        <p>Case files, contracts, and regulatory briefs queried by dozens of attorneys. Cache each document once, serve thousands of queries — with document-level ACL enforced on every cache access.</p>
+        <div class="uc-metric">→ 70–90% reduction in per-query prefill cost</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-industry">Healthcare</div>
+        <h3>Hospitals &amp; Clinical Systems</h3>
+        <p>Patient records in EHR systems queried across departments. The KV cache stays within your HIPAA perimeter. PHI is never processed by external APIs after the initial on-prem prefill.</p>
+        <div class="uc-metric">→ Zero data egress after first prefill</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-industry">Semiconductors</div>
+        <h3>Hardware &amp; Datasheet-Driven R&amp;D</h3>
+        <p>Thousands of datasheets, design specs, and technical errata queried daily by engineers. Prefill the corpus once — engineers query fast without re-processing 500-page PDFs every time.</p>
+        <div class="uc-metric">→ Prefill once per spec version, not per query</div>
+      </div>
+      <div class="uc-card">
+        <div class="uc-industry">Fintech</div>
+        <h3>Financial Services &amp; Fintech</h3>
+        <p>Risk models, regulatory filings, and fund prospectuses queried by analysts. Per-document billing maps cleanly to fintech unit economics — a line item you can actually predict and budget.</p>
+        <div class="uc-metric">→ Predictable monthly AI spend</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- PRICING -->
+<div id="pricing">
+  <div class="section-inner">
+    <div class="sec-label">Pricing Model</div>
+    <h2 class="sec-title">Pay per document,<br>not per query.</h2>
+
+    <div class="pricing-grid">
+      <div>
+        <div class="price-table">
+          <div class="price-table-header">Cost structure</div>
+          <div class="price-row"><span class="pl">Prefill (per document)</span><span class="pv">billed once</span></div>
+          <div class="price-row"><span class="pl">Re-prefill on doc update</span><span class="pv">billed on change</span></div>
+          <div class="price-row"><span class="pl">Re-prefill on model change</span><span class="pv">billed on change</span></div>
+          <div class="price-row"><span class="pl">Decode (per query)</span><span class="pv">query tokens only</span></div>
+          <div class="price-row"><span class="pl">KV cache storage</span><span class="pv">your infra</span></div>
+          <div class="price-row"><span class="pl">Data egress to Minnesväv</span><span class="pv">$0 — stays local</span></div>
+        </div>
+      </div>
+      <ul class="pricing-points">
+        <li class="pp">
+          <div class="pp-icon">∑</div>
+          <div>
+            <div class="pp-title">Predictable by design</div>
+            <div class="pp-desc">Costs scale with your document corpus, not query volume. Finance teams can model AI spend for the first time — it's just a document count.</div>
+          </div>
+        </li>
+        <li class="pp">
+          <div class="pp-icon">↻</div>
+          <div>
+            <div class="pp-title">Pay only on change</div>
+            <div class="pp-desc">Cache is rebuilt only when a document is updated or you switch model versions. A stable corpus pays once, period.</div>
+          </div>
+        </li>
+        <li class="pp">
+          <div class="pp-icon">⇌</div>
+          <div>
+            <div class="pp-title">Open and proprietary models both supported</div>
+            <div class="pp-desc">For open models, we cache the KV state. For proprietary APIs (Claude, GPT-4), we cache document-level query trees — same document-first guarantee, different mechanism.</div>
+          </div>
+        </li>
+        <li class="pp">
+          <div class="pp-icon">⊛</div>
+          <div>
+            <div class="pp-title">Low-cost inference hardware</div>
+            <div class="pp-desc">Works with cost-efficient inference engines — no dependency on expensive NVIDIA GPU clusters. Use commodity hardware or your existing on-prem investment.</div>
+          </div>
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+
+<!-- CTA -->
+<div class="cta-band" id="waitlist">
+  <div class="sec-label" style="display: inline-block; margin-bottom: 1.5rem;">Early Access</div>
+  <h2>Your memory should stay<br>where your documents live.</h2>
+  <p>Minnesväv is in private beta with select design partners in legal, healthcare, and semiconductors. Join the waitlist to get early access and shape the roadmap.</p>
+  <div class="waitlist-row">
+    <input type="email" class="waitlist-input" placeholder="you@company.com" id="email-input">
+    <button class="btn-cta" onclick="handleWaitlist()">Request Access</button>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-l">© 2026 Minnesväv — Memory Woven Local</div>
+  <div class="footer-r">minnesväv.ai</div>
+</footer>
+
+<script>
+// ———————————————————————————————————————
+// WOVEN MEMORY CANVAS
+// ———————————————————————————————————————
+(function() {
+  const canvas = document.getElementById('weave');
+  const ctx    = canvas.getContext('2d');
+
+  const COLS = 30, ROWS = 20;
+  let W, H, pts = [], t = 0, raf;
+
+  function resize() {
+    W = canvas.offsetWidth;
+    H = canvas.offsetHeight;
+    canvas.width  = W * devicePixelRatio;
+    canvas.height = H * devicePixelRatio;
+    ctx.scale(devicePixelRatio, devicePixelRatio);
+    buildGrid();
+  }
+
+  function buildGrid() {
+    pts = [];
+    const sx = W / (COLS - 1);
+    const sy = H / (ROWS - 1);
+    for (let r = 0; r < ROWS; r++) {
+      for (let c = 0; c < COLS; c++) {
+        pts.push({
+          bx: c * sx,
+          by: r * sy,
+          phase : Math.random() * Math.PI * 2,
+          freq  : 0.28 + Math.random() * 0.38,
+          amp   : 8 + Math.random() * 8,
+        });
+      }
+    }
+  }
+
+  function pos(i) {
+    const p  = pts[i];
+    const dx = Math.sin(t * p.freq        + p.phase) * p.amp;
+    const dy = Math.cos(t * p.freq * 0.72 + p.phase * 1.3) * p.amp;
+    return { x: p.bx + dx, y: p.by + dy };
+  }
+
+  function draw() {
+    ctx.clearRect(0, 0, W, H);
+
+    // deep radial bg
+    const g = ctx.createRadialGradient(W * 0.3, H * 0.45, 0, W * 0.5, H * 0.5, W * 0.75);
+    g.addColorStop(0,   'rgba(4, 28, 44, 0.97)');
+    g.addColorStop(0.5, 'rgba(7, 11, 24, 0.98)');
+    g.addColorStop(1,   'rgba(7, 11, 24, 1)');
+    ctx.fillStyle = g;
+    ctx.fillRect(0, 0, W, H);
+
+    // horizontal threads
+    for (let r = 0; r < ROWS; r++) {
+      const accentH = (r % 4 === 0);
+      const alpha   = 0.06 + Math.sin(r / ROWS * Math.PI) * 0.1;
+      ctx.beginPath();
+      for (let c = 0; c < COLS; c++) {
+        const p = pos(r * COLS + c);
+        c === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      }
+      ctx.strokeStyle = accentH
+        ? `rgba(0, 232, 192, ${alpha * 2.2})`
+        : `rgba(139, 157, 232, ${alpha * 0.9})`;
+      ctx.lineWidth = accentH ? 0.9 : 0.45;
+      ctx.stroke();
+    }
+
+    // vertical threads
+    for (let c = 0; c < COLS; c++) {
+      const accentV = (c % 5 === 0);
+      const alpha   = 0.04 + Math.sin(c / COLS * Math.PI) * 0.07;
+      ctx.beginPath();
+      for (let r = 0; r < ROWS; r++) {
+        const p = pos(r * COLS + c);
+        r === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
+      }
+      ctx.strokeStyle = accentV
+        ? `rgba(0, 232, 192, ${alpha * 1.8})`
+        : `rgba(100, 120, 200, ${alpha})`;
+      ctx.lineWidth = accentV ? 0.7 : 0.3;
+      ctx.stroke();
+    }
+
+    // intersection glows (KV nodes)
+    for (let r = 0; r < ROWS; r += 3) {
+      for (let c = 0; c < COLS; c += 4) {
+        const p = pos(r * COLS + c);
+        const pulse = (Math.sin(t * 1.8 + c * 0.6 + r * 0.9) + 1) * 0.5;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 1.4 + pulse * 2.2, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(0, 232, 192, ${0.12 + pulse * 0.28})`;
+        ctx.fill();
+      }
+    }
+
+    // edge vignette
+    const vig = ctx.createRadialGradient(W/2, H/2, H * 0.28, W/2, H/2, H * 0.95);
+    vig.addColorStop(0, 'rgba(7,11,24,0)');
+    vig.addColorStop(1, 'rgba(7,11,24,0.88)');
+    ctx.fillStyle = vig;
+    ctx.fillRect(0, 0, W, H);
+
+    // bottom fade
+    const fade = ctx.createLinearGradient(0, H * 0.55, 0, H);
+    fade.addColorStop(0, 'rgba(7,11,24,0)');
+    fade.addColorStop(1, 'rgba(7,11,24,0.96)');
+    ctx.fillStyle = fade;
+    ctx.fillRect(0, 0, W, H);
+
+    t += 0.007;
+    raf = requestAnimationFrame(draw);
+  }
+
+  window.addEventListener('resize', () => {
+    cancelAnimationFrame(raf);
+    resize();
+    draw();
+  });
+
+  resize();
+  draw();
+})();
+
+// ———————————————————————————————————————
+// WAITLIST
+// ———————————————————————————————————————
+function handleWaitlist() {
+  const input = document.getElementById('email-input');
+  const val   = input.value.trim();
+  if (!val || !val.includes('@') || !val.includes('.')) {
+    input.style.borderColor = 'rgba(220,80,80,0.6)';
+    input.focus();
+    return;
+  }
+  input.style.borderColor = 'var(--accent-border)';
+  input.value      = '';
+  input.placeholder = "You're on the list — we'll be in touch.";
+  input.disabled   = true;
+}
+
+// ———————————————————————————————————————
+// INTERSECTION OBSERVER — subtle reveal
+// ———————————————————————————————————————
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => {
+    if (e.isIntersecting) {
+      e.target.style.opacity  = '1';
+      e.target.style.transform = 'translateY(0)';
+    }
+  });
+}, { threshold: 0.12 });
+
+document.querySelectorAll('.problem-card, .step, .uc-card, .pp, .arch-node').forEach(el => {
+  el.style.opacity   = '0';
+  el.style.transform = 'translateY(16px)';
+  el.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
+  obs.observe(el);
+});
+</script>
+</body>
+</html>
