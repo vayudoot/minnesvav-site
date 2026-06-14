@@ -1,1216 +1,799 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Minnesväv — Memory Woven Local</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400;1,600&family=Syne:wght@400;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
-    :root {
-      --bg:           #070b18;
-      --bg-surface:   #0d1224;
-      --bg-card:      #111828;
-      --accent:       #00e8c0;
-      --accent-glow:  rgba(0, 232, 192, 0.12);
-      --accent-border:rgba(0, 232, 192, 0.28);
-      --purple:       #8b9de8;
-      --text:         #ede9dc;
-      --text-muted:   rgba(237, 233, 220, 0.52);
-      --text-faint:   rgba(237, 233, 220, 0.22);
-      --border:       rgba(255, 255, 255, 0.07);
-      --border-med:   rgba(255, 255, 255, 0.12);
-    }
-
-    html { scroll-behavior: smooth; }
-
-    body {
-      font-family: 'Syne', sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      overflow-x: hidden;
-    }
-
-    /* Subtle grain overlay */
-    body::after {
-      content: '';
-      position: fixed;
-      inset: 0;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
-      opacity: 0.028;
-      pointer-events: none;
-      z-index: 9999;
-    }
-
-    /* ——————————————— NAV ——————————————— */
-    nav {
-      position: fixed;
-      top: 0; left: 0; right: 0;
-      z-index: 200;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 3rem;
-      border-bottom: 1px solid var(--border);
-      backdrop-filter: blur(24px) saturate(1.4);
-      background: rgba(7, 11, 24, 0.72);
-    }
-
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.8rem;
-      text-decoration: none;
-      color: var(--text);
-    }
-
-    .logo-mark { width: 34px; height: 34px; }
-
-    .logo-name {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.25rem;
-      font-weight: 600;
-      letter-spacing: 0.01em;
-    }
-
-    .nav-links {
-      list-style: none;
-      display: flex;
-      gap: 2.5rem;
-      align-items: center;
-    }
-
-    .nav-links a {
-      color: var(--text-muted);
-      text-decoration: none;
-      font-size: 0.78rem;
-      font-weight: 700;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      transition: color 0.2s;
-    }
-    .nav-links a:hover { color: var(--text); }
-
-    .btn-cta {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.55rem 1.3rem;
-      background: var(--accent);
-      color: #070b18;
-      font-family: 'Syne', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 800;
-      letter-spacing: 0.05em;
-      text-decoration: none;
-      border: none;
-      cursor: pointer;
-      transition: all 0.18s;
-    }
-    .btn-cta:hover { background: #fff; transform: translateY(-1px); }
-
-    .btn-ghost {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.55rem 1.3rem;
-      background: transparent;
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      font-size: 0.8rem;
-      font-weight: 700;
-      letter-spacing: 0.05em;
-      text-decoration: none;
-      border: 1px solid var(--border-med);
-      cursor: pointer;
-      transition: all 0.18s;
-    }
-    .btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
-
-    /* ——————————————— HERO ——————————————— */
-    .hero {
-      position: relative;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 8rem 3rem 10rem;
-      overflow: hidden;
-    }
-
-    #weave {
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-    }
-
-    .hero-content {
-      position: relative;
-      z-index: 2;
-      max-width: 760px;
-    }
-
-    .tag {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.55rem;
-      padding: 0.3rem 0.85rem;
-      background: var(--accent-glow);
-      border: 1px solid var(--accent-border);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.7rem;
-      color: var(--accent);
-      letter-spacing: 0.08em;
-      margin-bottom: 2rem;
-      animation: fadeUp 0.7s ease forwards;
-    }
-
-    .tag-dot {
-      width: 5px; height: 5px;
-      background: var(--accent);
-      border-radius: 50%;
-      animation: pulse 2.2s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50%       { opacity: 0.35; transform: scale(0.7); }
-    }
-
-    .hero h1 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(3.2rem, 8vw, 6.2rem);
-      font-weight: 600;
-      line-height: 1.03;
-      letter-spacing: -0.015em;
-      margin-bottom: 1.75rem;
-      animation: fadeUp 0.7s 0.1s ease both;
-    }
-
-    .hero h1 em {
-      font-style: italic;
-      color: var(--accent);
-    }
-
-    .hero-sub {
-      font-size: 1.05rem;
-      color: var(--text-muted);
-      max-width: 530px;
-      line-height: 1.75;
-      margin-bottom: 2.75rem;
-      animation: fadeUp 0.7s 0.2s ease both;
-    }
-
-    .hero-actions {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-      animation: fadeUp 0.7s 0.32s ease both;
-    }
-
-    /* bottom stat bar */
-    .hero-stats {
-      position: absolute;
-      bottom: 0; left: 0; right: 0;
-      z-index: 2;
-      display: flex;
-      gap: 0;
-      border-top: 1px solid var(--border);
-      animation: fadeUp 0.7s 0.55s ease both;
-    }
-
-    .hero-stat {
-      flex: 1;
-      padding: 1.5rem 2.5rem;
-      border-right: 1px solid var(--border);
-    }
-    .hero-stat:last-child { border-right: none; }
-
-    .hs-val {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 2.2rem;
-      font-weight: 600;
-      color: var(--accent);
-      line-height: 1;
-      margin-bottom: 0.3rem;
-    }
-
-    .hs-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-    }
-
-    /* ——————————————— SHARED SECTION STYLES ——————————————— */
-    .section-inner {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: 6rem 3rem;
-    }
-
-    .full-bleed { background: var(--bg-surface); border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
-
-    .sec-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.68rem;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 1rem;
-    }
-
-    .sec-title {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2rem, 4vw, 3.4rem);
-      font-weight: 600;
-      line-height: 1.12;
-      margin-bottom: 1.25rem;
-    }
-
-    .sec-sub {
-      font-size: 0.97rem;
-      color: var(--text-muted);
-      max-width: 560px;
-      line-height: 1.78;
-    }
-
-    /* ——————————————— PROBLEM ——————————————— */
-    .problem-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1.5rem;
-      margin-top: 4rem;
-    }
-
-    .problem-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 2.25rem;
-    }
-
-    .problem-card.is-active {
-      border-color: var(--accent-border);
-      background: rgba(0, 232, 192, 0.04);
-    }
-
-    .pc-label {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.66rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 1rem;
-    }
-
-    .problem-card.is-active .pc-label { color: var(--accent); }
-
-    .problem-card h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.45rem;
-      font-weight: 600;
-      margin-bottom: 1.25rem;
-    }
-
-    .check-list {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 0.65rem;
-    }
-
-    .check-list li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.7rem;
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.55;
-    }
-
-    .check-list li .marker {
-      flex-shrink: 0;
-      margin-top: 2px;
-      color: var(--text-faint);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-    }
-
-    .problem-card.is-active .check-list li .marker { color: var(--accent); }
-
-    /* ——————————————— HOW IT WORKS ——————————————— */
-    .steps-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      margin-top: 4.5rem;
-      position: relative;
-    }
-
-    .steps-row::before {
-      content: '';
-      position: absolute;
-      top: 2.2rem;
-      left: calc(100% / 6);
-      right: calc(100% / 6);
-      height: 1px;
-      background: linear-gradient(90deg, transparent, var(--accent-border), var(--accent), var(--accent-border), transparent);
-    }
-
-    .step {
-      padding: 0 2rem;
-      text-align: center;
-    }
-
-    .step:first-child { padding-left: 0; }
-    .step:last-child  { padding-right: 0; }
-
-    .step-num {
-      width: 44px; height: 44px;
-      margin: 0 auto 1.75rem;
-      border: 1px solid var(--accent-border);
-      background: var(--accent-glow);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      color: var(--accent);
-    }
-
-    .step h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.3rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-    }
-
-    .step p {
-      font-size: 0.87rem;
-      color: var(--text-muted);
-      line-height: 1.68;
-    }
-
-    .code-pill {
-      margin-top: 1.25rem;
-      padding: 0.65rem 0.9rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.68rem;
-      color: var(--text-muted);
-      text-align: left;
-      line-height: 1.7;
-    }
-
-    .code-pill .kw { color: var(--accent); }
-    .code-pill .cm { color: var(--text-faint); }
-
-    /* ——————————————— ARCHITECTURE ——————————————— */
-    .arch-box {
-      margin-top: 4rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 3rem;
-      overflow: hidden;
-      position: relative;
-    }
-
-    .arch-box::before {
-      content: '';
-      position: absolute;
-      top: 0; left: 0; right: 0;
-      height: 2px;
-      background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    }
-
-    .arch-flow {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: wrap;
-      gap: 0;
-    }
-
-    .arch-node {
-      background: var(--bg-surface);
-      border: 1px solid var(--border);
-      padding: 1.1rem 1.3rem;
-      min-width: 130px;
-      text-align: center;
-    }
-
-    .arch-node.highlight {
-      border-color: var(--accent-border);
-      background: var(--accent-glow);
-    }
-
-    .arch-icon { font-size: 1.4rem; margin-bottom: 0.4rem; }
-
-    .arch-micro {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-faint);
-      margin-bottom: 0.2rem;
-    }
-
-    .arch-node.highlight .arch-micro { color: var(--accent); opacity: 0.7; }
-
-    .arch-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-    }
-
-    .arch-arrow {
-      width: 48px;
-      height: 1px;
-      position: relative;
-      flex-shrink: 0;
-    }
-
-    .arch-arrow::after {
-      content: '›';
-      position: absolute;
-      right: -5px;
-      top: -11px;
-      font-size: 1.1rem;
-    }
-
-    .arch-arrow.dim  { background: var(--border); }
-    .arch-arrow.dim::after { color: var(--text-faint); }
-    .arch-arrow.glow { background: var(--accent); }
-    .arch-arrow.glow::after { color: var(--accent); }
-
-    .arch-meta {
-      margin-top: 2.25rem;
-      padding-top: 2rem;
-      border-top: 1px solid var(--border);
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 2rem;
-      text-align: center;
-    }
-
-    .arch-meta-key {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.66rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.35rem;
-    }
-
-    .arch-meta-val {
-      font-size: 0.86rem;
-      color: var(--text-muted);
-      line-height: 1.5;
-    }
-
-    /* ——————————————— USE CASES ——————————————— */
-    .usecase-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 1.5rem;
-      margin-top: 4rem;
-    }
-
-    .uc-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      padding: 2.25rem;
-      transition: border-color 0.22s;
-    }
-
-    .uc-card:hover { border-color: rgba(0, 232, 192, 0.22); }
-
-    .uc-industry {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.66rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-      margin-bottom: 0.75rem;
-    }
-
-    .uc-card h3 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 1.35rem;
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-    }
-
-    .uc-card p {
-      font-size: 0.88rem;
-      color: var(--text-muted);
-      line-height: 1.68;
-    }
-
-    .uc-metric {
-      margin-top: 1.25rem;
-      padding-top: 1rem;
-      border-top: 1px solid var(--border);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--accent);
-    }
-
-    /* ——————————————— PRICING ——————————————— */
-    .pricing-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.3fr;
-      gap: 5rem;
-      margin-top: 4rem;
-      align-items: start;
-    }
-
-    .price-table {
-      background: var(--bg-card);
-      border: 1px solid var(--accent-border);
-      overflow: hidden;
-    }
-
-    .price-table-header {
-      padding: 1rem 1.5rem;
-      background: var(--accent-glow);
-      border-bottom: 1px solid var(--accent-border);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.66rem;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--accent);
-    }
-
-    .price-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 0.9rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-      font-size: 0.88rem;
-    }
-
-    .price-row:last-child { border-bottom: none; }
-    .price-row .pl { color: var(--text-muted); }
-    .price-row .pv { font-family: 'JetBrains Mono', monospace; font-size: 0.8rem; color: var(--accent); }
-
-    .pricing-points {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 1.75rem;
-    }
-
-    .pp {
-      display: flex;
-      gap: 1.1rem;
-      align-items: flex-start;
-    }
-
-    .pp-icon {
-      width: 30px; height: 30px;
-      flex-shrink: 0;
-      background: var(--accent-glow);
-      border: 1px solid var(--accent-border);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      color: var(--accent);
-    }
-
-    .pp-title {
-      font-size: 0.95rem;
-      font-weight: 700;
-      margin-bottom: 0.35rem;
-    }
-
-    .pp-desc {
-      font-size: 0.85rem;
-      color: var(--text-muted);
-      line-height: 1.65;
-    }
-
-    /* ——————————————— CTA ——————————————— */
-    .cta-band {
-      text-align: center;
-      padding: 7rem 3rem;
-      background: var(--bg-surface);
-      border-top: 1px solid var(--border);
-      border-bottom: 1px solid var(--border);
-      position: relative;
-      overflow: hidden;
-    }
-
-    .cta-band::before {
-      content: '';
-      position: absolute;
-      top: 50%; left: 50%;
-      transform: translate(-50%, -50%);
-      width: 800px; height: 400px;
-      background: radial-gradient(ellipse, rgba(0, 232, 192, 0.06) 0%, transparent 70%);
-      pointer-events: none;
-    }
-
-    .cta-band h2 {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: clamp(2.4rem, 5vw, 4rem);
-      font-weight: 600;
-      line-height: 1.1;
-      margin-bottom: 1.5rem;
-      position: relative;
-    }
-
-    .cta-band p {
-      font-size: 1rem;
-      color: var(--text-muted);
-      max-width: 440px;
-      margin: 0 auto 2.75rem;
-      line-height: 1.75;
-      position: relative;
-    }
-
-    .waitlist-row {
-      display: flex;
-      max-width: 400px;
-      margin: 0 auto;
-      position: relative;
-    }
-
-    .waitlist-input {
-      flex: 1;
-      padding: 0.75rem 1rem;
-      background: var(--bg-card);
-      border: 1px solid var(--border-med);
-      border-right: none;
-      color: var(--text);
-      font-family: 'Syne', sans-serif;
-      font-size: 0.88rem;
-      outline: none;
-      transition: border-color 0.18s;
-    }
-
-    .waitlist-input::placeholder { color: var(--text-faint); }
-    .waitlist-input:focus { border-color: var(--accent-border); }
-
-    /* ——————————————— FOOTER ——————————————— */
-    footer {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 2rem 3rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .footer-l {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.72rem;
-      color: var(--text-faint);
-    }
-
-    .footer-r {
-      font-family: 'Cormorant Garamond', serif;
-      font-size: 0.9rem;
-      color: var(--text-faint);
-      font-style: italic;
-    }
-
-    /* ——————————————— ANIMATIONS ——————————————— */
-    @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(18px); }
-      to   { opacity: 1; transform: translateY(0); }
-    }
-
-    /* ——————————————— RESPONSIVE ——————————————— */
-    @media (max-width: 860px) {
-      nav { padding: 1rem 1.5rem; }
-      .nav-links { display: none; }
-      .hero { padding: 7rem 1.5rem 9rem; }
-      .section-inner { padding: 4rem 1.5rem; }
-      .problem-grid, .steps-row, .usecase-grid, .pricing-grid { grid-template-columns: 1fr; }
-      .steps-row::before { display: none; }
-      .step { padding: 0 0 2rem; text-align: left; }
-      .step-num { margin: 0 0 1.25rem; }
-      .hero-stats { display: none; }
-      .arch-flow { flex-direction: column; }
-      .arch-arrow { transform: rotate(90deg); }
-      .arch-meta { grid-template-columns: 1fr; gap: 1.25rem; }
-      .arch-box { padding: 1.75rem; }
-      .cta-band { padding: 4rem 1.5rem; }
-      footer { flex-direction: column; gap: 0.5rem; text-align: center; }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Minnesväv — The reliability layer for stateful AI inference</title>
+<meta name="description" content="Minnesväv makes inference sessions survive failure. When a GPU node dies mid-session, the session resumes on healthy hardware in seconds — no lost work, no re-paid prefill.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500;1,600&family=Syne:wght@600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #070b18;
+    --bg-deep: #080a0a;
+    --panel: rgba(255,255,255,0.025);
+    --line: rgba(255,255,255,0.08);
+    --line-soft: rgba(255,255,255,0.05);
+    --text: #f0ede6;
+    --text-dim: rgba(240,237,230,0.55);
+    --text-faint: rgba(240,237,230,0.32);
+    --accent: #00e8c0;
+    --ag: rgba(0,232,192,0.08);
+    --ab: rgba(0,232,192,0.35);
+    --purple: #8b9de8;
+    --pg: rgba(139,157,232,0.08);
+    --danger: #e86a5a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  ::selection { background: rgba(0,232,192,0.25); }
+
+  /* ——————————————— NAV ——————————————— */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 50;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 1.15rem 3rem;
+    background: rgba(7,11,24,0);
+    border-bottom: 1px solid transparent;
+    transition: background 0.5s ease, border-color 0.5s ease, backdrop-filter 0.5s ease;
+  }
+  nav.ink {
+    background: rgba(7,11,24,0.82);
+    backdrop-filter: blur(14px);
+    border-bottom-color: var(--line-soft);
+  }
+  .logo { display: flex; align-items: center; gap: 0.7rem; text-decoration: none; color: var(--text); }
+  .logo-mark { width: 30px; height: 30px; }
+  .logo-mark .lm { stroke: #c8c8c8; transition: stroke 1.4s ease; }
+  .logo-mark .lx { stroke: rgba(180,180,180,0.38); transition: stroke 1.4s ease; }
+  nav.ink .logo-mark .lm { stroke: var(--accent); }
+  nav.ink .logo-mark .lx { stroke: rgba(0,232,192,0.38); }
+  .logo-name { font-family: 'Cormorant Garamond', serif; font-size: 1.25rem; font-weight: 600; }
+
+  .nav-links { list-style: none; display: flex; gap: 2.5rem; align-items: center; }
+  .nav-links a {
+    color: rgba(240,237,230,0.4); text-decoration: none;
+    font-size: 0.77rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;
+    transition: color 0.2s;
+  }
+  .nav-links a:hover, .nav-links a:focus-visible { color: var(--text); }
+
+  .btn-nav {
+    padding: 0.52rem 1.2rem;
+    border: 1px solid rgba(255,255,255,0.18); background: transparent;
+    color: var(--text); font-family: 'Syne', sans-serif;
+    font-size: 0.77rem; font-weight: 700; letter-spacing: 0.06em;
+    text-decoration: none; cursor: pointer; transition: all 0.2s;
+  }
+  .btn-nav:hover { background: rgba(255,255,255,0.07); }
+  nav.ink .btn-nav { border-color: var(--ab); color: var(--accent); }
+  nav.ink .btn-nav:hover { background: var(--ag); }
+
+  a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+
+  /* ——————————————— HERO (monochrome; only the recovery is in color) ——————————————— */
+  .hero {
+    position: relative; min-height: 100vh;
+    display: flex; flex-direction: column; justify-content: center;
+    padding: 8rem 3rem 7rem; overflow: hidden; background: var(--bg-deep);
+  }
+  #weave { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .hero::after {
+    content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 160px;
+    background: linear-gradient(to bottom, transparent, var(--bg)); pointer-events: none;
+  }
+  .hero-inner { position: relative; z-index: 2; max-width: 780px; }
+
+  .mono-tag {
+    display: inline-flex; align-items: center; gap: 0.55rem;
+    padding: 0.3rem 0.85rem;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.03);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; color: #777;
+    letter-spacing: 0.1em; margin-bottom: 2rem;
+    animation: fadeUp 0.7s ease both;
+  }
+  .mono-dot { width: 5px; height: 5px; background: #888; border-radius: 50%; animation: blink 2.5s ease-in-out infinite; }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.2; } }
+
+  .hero h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(3.2rem, 8vw, 6.4rem);
+    font-weight: 600; line-height: 1.04; letter-spacing: -0.02em;
+    color: var(--text); margin-bottom: 1.75rem;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+  .hero h1 em { font-style: italic; color: #bbb; }
+
+  .hero-sub {
+    font-family: 'Syne', sans-serif; font-weight: 600;
+    font-size: 1rem; color: #6a6a64; max-width: 560px;
+    line-height: 1.8; margin-bottom: 2.75rem;
+    animation: fadeUp 0.7s 0.22s ease both;
+  }
+  .hero-sub strong { color: #9b988f; font-weight: 700; }
+
+  .hero-ctas { display: flex; gap: 1rem; flex-wrap: wrap; animation: fadeUp 0.7s 0.32s ease both; }
+  .btn-primary {
+    padding: 0.85rem 1.8rem; background: #e8e5dc; color: #0a0a0a;
+    font-family: 'Syne', sans-serif; font-weight: 800; font-size: 0.82rem; letter-spacing: 0.05em;
+    text-decoration: none; transition: all 0.25s; border: 1px solid #e8e5dc;
+  }
+  .btn-primary:hover { background: var(--accent); border-color: var(--accent); }
+  .btn-ghost {
+    padding: 0.85rem 1.8rem; background: transparent; color: #999;
+    border: 1px solid rgba(255,255,255,0.16);
+    font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.82rem; letter-spacing: 0.05em;
+    text-decoration: none; transition: all 0.25s;
+  }
+  .btn-ghost:hover { color: var(--text); border-color: rgba(255,255,255,0.35); }
+
+  .hero-stats {
+    display: flex; gap: 3.5rem; margin-top: 4.5rem;
+    animation: fadeUp 0.7s 0.45s ease both;
+  }
+  .hstat .n { font-family: 'Cormorant Garamond', serif; font-size: 2.1rem; font-weight: 600; color: #d6d3ca; }
+  .hstat .l { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #595959; letter-spacing: 0.1em; text-transform: uppercase; margin-top: 0.3rem; }
+  .hero-fineprint {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; color: #444;
+    margin-top: 1.6rem; letter-spacing: 0.04em;
+    animation: fadeUp 0.7s 0.5s ease both;
+  }
+  .hero-fineprint a { color: #555; }
+
+  /* ——————————————— SHARED SECTION CHROME ——————————————— */
+  section { position: relative; }
+  .section-inner { max-width: 1120px; margin: 0 auto; padding: 7rem 3rem; }
+  .eyebrow {
+    font-family: 'JetBrains Mono', monospace; font-size: 0.68rem;
+    letter-spacing: 0.18em; text-transform: uppercase; color: var(--accent);
+    margin-bottom: 1.1rem;
+  }
+  .section-title {
+    font-family: 'Cormorant Garamond', serif; font-weight: 600;
+    font-size: clamp(2.1rem, 4.4vw, 3.3rem); line-height: 1.1; letter-spacing: -0.015em;
+    max-width: 640px; margin-bottom: 1.2rem;
+  }
+  .section-title em { font-style: italic; color: var(--purple); }
+  .section-lede { color: var(--text-dim); font-size: 0.95rem; line-height: 1.85; max-width: 600px; font-weight: 600; }
+
+  .reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s ease; }
+  .reveal.in { opacity: 1; transform: none; }
+
+  /* ——————————————— TERMINAL STRIP ——————————————— */
+  .term-wrap { max-width: 880px; margin: -3.5rem auto 0; padding: 0 3rem; position: relative; z-index: 3; }
+  .term {
+    background: #05070f; border: 1px solid var(--line);
+    box-shadow: 0 30px 80px rgba(0,0,0,0.55);
+  }
+  .term-bar {
+    display: flex; align-items: center; gap: 0.45rem;
+    padding: 0.7rem 1.1rem; border-bottom: 1px solid var(--line-soft);
+  }
+  .term-bar i { width: 9px; height: 9px; border-radius: 50%; background: rgba(255,255,255,0.12); }
+  .term-bar span { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #555; margin-left: 0.6rem; letter-spacing: 0.08em; }
+  .term-body {
+    padding: 1.4rem 1.4rem 1.6rem; font-family: 'JetBrains Mono', monospace;
+    font-size: 0.78rem; line-height: 2.05; color: #8d8a82; min-height: 13.5em;
+  }
+  .term-body .p { color: var(--purple); }
+  .term-body .ok { color: var(--accent); }
+  .term-body .bad { color: var(--danger); }
+  .term-body .dim { color: #50504c; }
+  .caret { display: inline-block; width: 8px; height: 1.05em; background: #9a978e; vertical-align: text-bottom; animation: blink 1.1s steps(1) infinite; }
+
+  /* ——————————————— PROBLEM ——————————————— */
+  .problem-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; margin-top: 3.5rem; }
+  .pcard {
+    border: 1px solid var(--line-soft); background: var(--panel);
+    padding: 2rem 1.8rem;
+  }
+  .pcard .k { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: var(--danger); letter-spacing: 0.14em; text-transform: uppercase; }
+  .pcard h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.55rem; font-weight: 600; margin: 0.9rem 0 0.8rem; }
+  .pcard p { color: var(--text-dim); font-size: 0.85rem; line-height: 1.8; font-weight: 600; }
+
+  /* ——————————————— PILLARS ——————————————— */
+  .pillars { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; margin-top: 3.5rem; }
+  .pillar {
+    border: 1px solid var(--line-soft); background: var(--panel);
+    padding: 2.2rem 1.9rem; position: relative; overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+  }
+  .pillar:hover { border-color: var(--ab); transform: translateY(-4px); }
+  .pillar .glyph { height: 44px; margin-bottom: 1.5rem; }
+  .pillar .k { font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; color: var(--accent); letter-spacing: 0.2em; }
+  .pillar h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.7rem; font-weight: 600; margin: 0.7rem 0 0.9rem; }
+  .pillar p { color: var(--text-dim); font-size: 0.85rem; line-height: 1.8; font-weight: 600; }
+  .pillar .foot { margin-top: 1.4rem; font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: var(--text-faint); letter-spacing: 0.06em; }
+
+  /* ——————————————— HOW IT WORKS ——————————————— */
+  .steps-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0; margin-top: 3.8rem; position: relative; }
+  .steps-row::before {
+    content: ""; position: absolute; top: 21px; left: 12%; right: 12%;
+    height: 1px; background: linear-gradient(90deg, transparent, var(--ab), var(--ab), transparent);
+  }
+  .step { padding: 0 1.6rem; text-align: center; position: relative; }
+  .step-num {
+    width: 42px; height: 42px; margin: 0 auto 1.4rem; position: relative; z-index: 1;
+    border: 1px solid var(--ab); background: var(--bg); color: var(--accent);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.8rem;
+    display: flex; align-items: center; justify-content: center; border-radius: 50%;
+  }
+  .step h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; margin-bottom: 0.7rem; }
+  .step p { color: var(--text-dim); font-size: 0.84rem; line-height: 1.8; font-weight: 600; }
+
+  .builton {
+    margin-top: 4.5rem; border: 1px solid var(--line-soft); background: var(--panel);
+    padding: 1.5rem 2rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap; justify-content: space-between;
+  }
+  .builton .lbl { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: var(--text-faint); letter-spacing: 0.16em; text-transform: uppercase; }
+  .builton ul { list-style: none; display: flex; gap: 2.2rem; flex-wrap: wrap; }
+  .builton li { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 0.86rem; color: var(--text-dim); letter-spacing: 0.03em; }
+  .builton li::before { content: "◆"; color: var(--ab); font-size: 0.55rem; vertical-align: middle; margin-right: 0.55rem; }
+
+  /* ——————————————— AUDIENCES ——————————————— */
+  .usecase-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1.4rem; margin-top: 3.5rem; }
+  .ucard { border: 1px solid var(--line-soft); background: var(--panel); padding: 2.1rem 2rem; }
+  .ucard .k { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: var(--purple); letter-spacing: 0.16em; text-transform: uppercase; }
+  .ucard h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.6rem; font-weight: 600; margin: 0.8rem 0; }
+  .ucard p { color: var(--text-dim); font-size: 0.85rem; line-height: 1.8; font-weight: 600; }
+  .ucard .pull { margin-top: 1.2rem; font-family: 'Cormorant Garamond', serif; font-style: italic; font-size: 1.05rem; color: #b9b5aa; }
+
+  /* ——————————————— OSS BAND ——————————————— */
+  .oss { background: linear-gradient(180deg, var(--bg) 0%, #081323 55%, var(--bg) 100%); }
+  .oss-flex { display: flex; gap: 4rem; align-items: center; flex-wrap: wrap; }
+  .oss-left { flex: 1 1 380px; }
+  .oss-code {
+    flex: 1 1 380px; background: #05070f; border: 1px solid var(--line);
+    font-family: 'JetBrains Mono', monospace; font-size: 0.76rem; line-height: 2;
+    padding: 1.6rem 1.7rem; color: #8d8a82;
+  }
+  .oss-code .c { color: #4b4b47; }
+  .oss-code .a { color: var(--accent); }
+
+  /* ——————————————— PRICING ——————————————— */
+  .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.4rem; margin-top: 3.5rem; }
+  .price { border: 1px solid var(--line-soft); background: var(--panel); padding: 2.3rem 2rem; display: flex; flex-direction: column; }
+  .price.hot { border-color: var(--ab); background: linear-gradient(180deg, rgba(0,232,192,0.05), var(--panel)); }
+  .price .k { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: var(--text-faint); letter-spacing: 0.18em; text-transform: uppercase; }
+  .price.hot .k { color: var(--accent); }
+  .price h3 { font-family: 'Cormorant Garamond', serif; font-size: 1.75rem; font-weight: 600; margin: 0.9rem 0 0.3rem; }
+  .price .amt { font-family: 'Cormorant Garamond', serif; font-size: 1.15rem; font-style: italic; color: var(--purple); margin-bottom: 1.1rem; }
+  .price p { color: var(--text-dim); font-size: 0.83rem; line-height: 1.8; font-weight: 600; flex: 1; }
+  .price a { margin-top: 1.6rem; align-self: flex-start; }
+
+  /* ——————————————— CTA BAND ——————————————— */
+  .cta-band {
+    text-align: center; padding: 7.5rem 3rem;
+    background: radial-gradient(ellipse 60% 70% at 50% 100%, rgba(0,232,192,0.09), transparent 70%);
+    border-top: 1px solid var(--line-soft);
+  }
+  .cta-band h2 { font-family: 'Cormorant Garamond', serif; font-size: clamp(2.4rem, 5vw, 3.8rem); font-weight: 600; line-height: 1.08; margin-bottom: 1.1rem; }
+  .cta-band h2 em { font-style: italic; color: var(--accent); }
+  .cta-band p { color: var(--text-dim); font-size: 0.95rem; font-weight: 600; max-width: 540px; margin: 0 auto 2.4rem; line-height: 1.8; }
+  .cta-band .hero-ctas { justify-content: center; }
+
+  /* ——————————————— FOOTER ——————————————— */
+  footer {
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    padding: 2.2rem 3rem; border-top: 1px solid var(--line-soft); flex-wrap: wrap;
+  }
+  .footer-l { font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: var(--text-faint); }
+  .footer-r { font-family: 'Cormorant Garamond', serif; font-size: 0.9rem; color: var(--text-faint); font-style: italic; }
+
+  /* ——————————————— ANIMATIONS / MOTION ——————————————— */
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(18px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation: none !important; transition: none !important; }
+    .reveal { opacity: 1; transform: none; }
+    html { scroll-behavior: auto; }
+  }
+
+  /* ——————————————— RESPONSIVE ——————————————— */
+  @media (max-width: 900px) {
+    nav { padding: 1rem 1.5rem; }
+    .nav-links { display: none; }
+    .hero { padding: 7rem 1.5rem 6rem; }
+    .term-wrap { padding: 0 1.5rem; margin-top: -2rem; }
+    .section-inner { padding: 4.5rem 1.5rem; }
+    .problem-grid, .pillars, .steps-row, .usecase-grid, .pricing-grid { grid-template-columns: 1fr; }
+    .steps-row::before { display: none; }
+    .step { padding: 0 0 2.4rem; text-align: left; }
+    .step-num { margin: 0 0 1.2rem; }
+    .hero-stats { flex-wrap: wrap; gap: 2rem; }
+    .builton { flex-direction: column; align-items: flex-start; gap: 1.2rem; }
+    .cta-band { padding: 5rem 1.5rem; }
+    footer { flex-direction: column; text-align: center; }
+  }
+</style>
 </head>
 <body>
 
 <!-- NAV -->
-<nav>
-  <a href="#" class="logo">
-    <svg class="logo-mark" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <!-- Woven M letterform -->
-      <path d="M4 28 L4 8 L17 20 L30 8 L30 28" stroke="#00e8c0" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
-      <!-- Weave over-under threads -->
-      <path d="M4 16 L10.5 21.5" stroke="rgba(0,232,192,0.45)" stroke-width="1.4" stroke-linecap="round"/>
-      <path d="M30 16 L23.5 21.5" stroke="rgba(0,232,192,0.45)" stroke-width="1.4" stroke-linecap="round"/>
-      <path d="M13 22.5 L17 20 L21 22.5" stroke="rgba(0,232,192,0.25)" stroke-width="1" stroke-linecap="round"/>
+<nav id="nav">
+  <a href="#" class="logo" aria-label="Minnesväv home">
+    <svg class="logo-mark" viewBox="0 0 34 34" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path class="lm" d="M4 28 L4 8 L17 20 L30 8 L30 28" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+      <path class="lx" d="M4 16 L10.5 21.5" stroke-width="1.4" stroke-linecap="round"/>
+      <path class="lx" d="M30 16 L23.5 21.5" stroke-width="1.4" stroke-linecap="round"/>
+      <path class="lx" d="M13 22.5 L17 20 L21 22.5" stroke-width="1" stroke-linecap="round"/>
     </svg>
     <span class="logo-name">Minnesväv</span>
   </a>
   <ul class="nav-links">
+    <li><a href="#problem">Why</a></li>
+    <li><a href="#product">Product</a></li>
     <li><a href="#how">How it works</a></li>
-    <li><a href="#usecases">Use cases</a></li>
-    <li><a href="#pricing">Pricing</a></li>
+    <li><a href="#who">Who it's for</a></li>
+    <li><a href="#oss">Open source</a></li>
   </ul>
-  <a href="#waitlist" class="btn-cta">Early Access</a>
+  <a href="#access" class="btn-nav">Design partner access</a>
 </nav>
 
 <!-- HERO -->
 <section class="hero">
-  <canvas id="weave"></canvas>
-
-  <div class="hero-content">
-    <div class="tag">
-      <span class="tag-dot"></span>
-      Document-centric KV Cache
-    </div>
-    <h1>
-      Memory <em>woven</em><br>
-      into every document.
-    </h1>
+  <canvas id="weave" aria-hidden="true"></canvas>
+  <div class="hero-inner">
+    <div class="mono-tag"><span class="mono-dot"></span> RELIABILITY LAYER · STATEFUL INFERENCE</div>
+    <h1>Memory woven<br>to <em>survive</em>.</h1>
     <p class="hero-sub">
-      Prefill once. Query forever. Minnesväv caches your documents' full AI context locally — so every query is cheaper, faster, and never leaves your infrastructure.
+      Inference became a distributed, stateful system. Minnesväv is its reliability layer.
+      When a GPU node dies forty minutes into an agent run, the session <strong>re-weaves onto
+      healthy hardware in seconds</strong> — no failed request, no re-paid prefill, no lost work.
     </p>
-    <div class="hero-actions">
-      <a href="#waitlist" class="btn-cta">Join waitlist →</a>
-      <a href="#how" class="btn-ghost">How it works</a>
+    <div class="hero-ctas">
+      <a class="btn-primary" href="#access">Become a design partner</a>
+      <a class="btn-ghost" href="#how">See how it works</a>
     </div>
+    <div class="hero-stats">
+      <div class="hstat"><div class="n">&lt;10s</div><div class="l">resume · p99</div></div>
+      <div class="hstat"><div class="n">&lt;2%</div><div class="l">serving overhead</div></div>
+      <div class="hstat"><div class="n">0</div><div class="l">tokens recomputed</div></div>
+      <div class="hstat"><div class="n">50–70%</div><div class="l">saved on spot GPUs</div></div>
+    </div>
+    <p class="hero-fineprint">// design targets, enforced as release gates in our public chaos suite</p>
   </div>
+</section>
 
-  <div class="hero-stats">
-    <div class="hero-stat">
-      <div class="hs-val">~90%</div>
-      <div class="hs-label">Prefill cost reduction</div>
+<!-- TERMINAL -->
+<div class="term-wrap reveal">
+  <div class="term" role="img" aria-label="Terminal demo: a node is killed mid-generation and the session resumes in seconds">
+    <div class="term-bar"><i></i><i></i><i></i><span>vav chaos — live fleet</span></div>
+    <div class="term-body" id="termBody"></div>
+  </div>
+</div>
+
+<!-- PROBLEM -->
+<section id="problem">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="eyebrow">The problem</div>
+      <h2 class="section-title">When a node dies mid-session, <em>everything burns.</em></h2>
+      <p class="section-lede">Disaggregated serving, tiered KV caches, and hour-long agent runs turned
+      every request into a multi-node, stateful pipeline. The stack moves bytes brilliantly —
+      and defines nothing about what happens when a machine fails.</p>
     </div>
-    <div class="hero-stat">
-      <div class="hs-val">1×</div>
-      <div class="hs-label">Prefill per document</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hs-val">0</div>
-      <div class="hs-label">Documents leave your infra</div>
-    </div>
-    <div class="hero-stat">
-      <div class="hs-val">∞</div>
-      <div class="hs-label">Queries served from cache</div>
+    <div class="problem-grid">
+      <div class="pcard reveal">
+        <div class="k">// sessions lost</div>
+        <h3>The work dies with the node</h3>
+        <p>A preemption or OOM destroys the entire accumulated context of an agent run.
+        The request fails, the prefill is re-paid from zero, and forty minutes of compute evaporates.</p>
+      </div>
+      <div class="pcard reveal">
+        <div class="k">// failures invisible</div>
+        <h3>Dashboards stay green</h3>
+        <p>TTFT spikes from cache eviction, tier thrash, and fragmentation — causes no app-layer
+        trace or GPU counter can see. Diagnosis runs on vibes.</p>
+      </div>
+      <div class="pcard reveal">
+        <div class="k">// capacity locked</div>
+        <h3>Spot GPUs sit off-limits</h3>
+        <p>Preemptible capacity is 50–70% cheaper and unusable for stateful serving.
+        Everyone over-pays for on-demand because failure means starting over.</p>
+      </div>
     </div>
   </div>
 </section>
 
-<!-- PROBLEM -->
-<div id="problem">
+<!-- PRODUCT PILLARS -->
+<section id="product">
   <div class="section-inner">
-    <div class="sec-label">The Problem</div>
-    <h2 class="sec-title">AI costs shouldn't be<br>a variable expense.</h2>
-    <p class="sec-sub">Every query against your internal documents re-processes the full context — a 200-page legal brief, a chip datasheet, a patient record. You pay full prefill cost every single time.</p>
-
-    <div class="problem-grid">
-      <div class="problem-card">
-        <div class="pc-label">Today's approach</div>
-        <h3>Query-centric inference</h3>
-        <ul class="check-list">
-          <li><span class="marker">—</span>Full document re-processed on every query</li>
-          <li><span class="marker">—</span>Cost scales with users × queries × doc size</li>
-          <li><span class="marker">—</span>Context sent to third-party API servers</li>
-          <li><span class="marker">—</span>Unpredictable monthly bills</li>
-          <li><span class="marker">—</span>No document-level ACL on cache access</li>
-          <li><span class="marker">—</span>Per-user or per-query caching strategies</li>
-        </ul>
+    <div class="reveal">
+      <div class="eyebrow">The product</div>
+      <h2 class="section-title">One platform. Three <em>guarantees.</em></h2>
+    </div>
+    <div class="pillars">
+      <div class="pillar reveal">
+        <svg class="glyph" viewBox="0 0 64 44" fill="none" aria-hidden="true">
+          <path d="M4 22 H24 M40 22 H60" stroke="rgba(240,237,230,0.25)" stroke-width="1.6" stroke-linecap="round"/>
+          <path d="M24 22 C30 22 30 10 38 10 C46 10 46 22 40 22" stroke="#00e8c0" stroke-width="1.8" stroke-linecap="round"/>
+          <circle cx="32" cy="22" r="2.6" fill="#e86a5a"/>
+        </svg>
+        <div class="k">RESUME</div>
+        <h3>Sessions that survive</h3>
+        <p>Append-only session state — KV blocks, generation cursor, sampler state — streams
+        continuously to a buddy node over NIXL. Kill the machine; the session re-attaches
+        and keeps decoding from the last committed token.</p>
+        <div class="foot">epoch fencing · zero re-prefill · exactly-once ownership</div>
       </div>
-      <div class="problem-card is-active">
-        <div class="pc-label">With Minnesväv</div>
-        <h3>Document-centric caching</h3>
-        <ul class="check-list">
-          <li><span class="marker">✓</span>Document processed once — KV cache reused forever</li>
-          <li><span class="marker">✓</span>Cost scales with corpus size, not query volume</li>
-          <li><span class="marker">✓</span>KV cache stays entirely within your perimeter</li>
-          <li><span class="marker">✓</span>Predictable pricing: per document, per prefill</li>
-          <li><span class="marker">✓</span>Same ACL as your DMS, applied to the cache</li>
-          <li><span class="marker">✓</span>Document-first: one cache entry per document</li>
-        </ul>
+      <div class="pillar reveal">
+        <svg class="glyph" viewBox="0 0 64 44" fill="none" aria-hidden="true">
+          <circle cx="32" cy="22" r="13" stroke="rgba(240,237,230,0.25)" stroke-width="1.6"/>
+          <circle cx="32" cy="22" r="5" stroke="#00e8c0" stroke-width="1.8"/>
+          <path d="M42 32 L52 40" stroke="#00e8c0" stroke-width="1.8" stroke-linecap="round"/>
+        </svg>
+        <div class="k">SEE</div>
+        <h3>The missing trace layer</h3>
+        <p>Every TTFT spike attributed to its real cause — eviction storms, tier misses,
+        transfer stalls, fragmentation — joined per session, between the app traces and
+        the GPU counters where nothing can see today.</p>
+        <div class="foot">OpenTelemetry-native · self-hosted store · per-tenant attribution</div>
+      </div>
+      <div class="pillar reveal">
+        <svg class="glyph" viewBox="0 0 64 44" fill="none" aria-hidden="true">
+          <path d="M6 36 C18 36 18 12 32 12 C46 12 46 28 58 28" stroke="rgba(240,237,230,0.25)" stroke-width="1.6" stroke-linecap="round" stroke-dasharray="3 5"/>
+          <circle cx="32" cy="12" r="3" fill="#8b9de8"/>
+          <circle cx="58" cy="28" r="3" fill="#00e8c0"/>
+        </svg>
+        <div class="k">PREDICT</div>
+        <h3>Caches warmed before demand</h3>
+        <p>A behavioral engine learns who queries which documents and when — pre-warming
+        context off-peak, inheriting document ACLs into the cache, and invalidating
+        surgically when sources change.</p>
+        <div class="foot">phantom prefill · ACL projection · Merkle invalidation</div>
       </div>
     </div>
   </div>
-</div>
+</section>
 
 <!-- HOW IT WORKS -->
-<div id="how" class="full-bleed">
+<section id="how">
   <div class="section-inner">
-    <div class="sec-label">How it works</div>
-    <h2 class="sec-title">Prefill once.<br>Decode for every query.</h2>
-    <p class="sec-sub">LLM inference has two phases. We make prefill a one-time cost per document — not a per-query tax paid by every user, every time.</p>
-
+    <div class="reveal">
+      <div class="eyebrow">How it works</div>
+      <h2 class="section-title">Snapshot. Detect. <em>Resume.</em></h2>
+      <p class="section-lede">Inference state is append-only — strictly simpler to replicate than
+      training state. We exploit that.</p>
+    </div>
     <div class="steps-row">
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">01</div>
-        <h3>Document materializes</h3>
-        <p>When a new document enters your DMS, Minnesväv runs prefill once — computing the full KV cache using your chosen open model, on your own hardware or private cloud.</p>
-        <div class="code-pill">
-          <span class="kw">prefill</span>(doc_id, model) → kv_cache<br>
-          <span class="cm">// cost: O(doc_tokens) — one time</span>
-        </div>
+        <h3>Snapshot</h3>
+        <p>A per-node daemon streams finalized KV blocks and generation state to a topology-aware
+        buddy over NVLink or RDMA — zero-copy, paced under 5% of link capacity, invisible to the engine.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">02</div>
-        <h3>Cache lives locally</h3>
-        <p>The KV cache is stored in your own infrastructure — on-prem DRAM, edge SSDs, or your private cloud. It inherits the exact ACL of the source document. Nothing leaves your domain.</p>
-        <div class="code-pill">
-          <span class="kw">store</span>(kv_cache, acl=doc.permissions)<br>
-          <span class="cm">// location: your_infra_only</span>
-        </div>
+        <h3>Detect</h3>
+        <p>Gossip heartbeats plus control-plane leases discover failure in under a second.
+        Cloud preemption notices trigger graceful drain — planned handoff, effectively zero loss.</p>
       </div>
-      <div class="step">
+      <div class="step reveal">
         <div class="step-num">03</div>
-        <h3>Queries decode cheaply</h3>
-        <p>Every user query injects the cached context and runs only decode. No document re-processing — cost is proportional to the query alone, not the document that was already cached.</p>
-        <div class="code-pill">
-          <span class="kw">decode</span>(query, kv_ref=doc_id)<br>
-          <span class="cm">// cost: O(query_tokens) per query</span>
-        </div>
+        <h3>Resume</h3>
+        <p>The session is fenced, the replica rehydrates into a healthy engine, the block table
+        re-maps, and decoding continues mid-stream. Your client's connection never even closes.</p>
       </div>
     </div>
-  </div>
-</div>
-
-<!-- ARCHITECTURE -->
-<div id="arch">
-  <div class="section-inner">
-    <div class="sec-label">Architecture</div>
-    <h2 class="sec-title">Where the cache lives.</h2>
-    <p class="sec-sub">Minnesväv integrates with your DMS — EHR, SharePoint, Confluence, internal wikis. The cache store is fully within your perimeter. The model runs on cost-efficient open-weight inference.</p>
-
-    <div class="arch-box">
-      <div class="arch-flow">
-        <div class="arch-node">
-          <div class="arch-icon">📄</div>
-          <div class="arch-micro">Source</div>
-          <div class="arch-label">DMS / EHR</div>
-        </div>
-        <div class="arch-arrow glow"></div>
-        <div class="arch-node highlight">
-          <div class="arch-icon">🧵</div>
-          <div class="arch-micro">Prefill Engine</div>
-          <div class="arch-label">Open Model</div>
-        </div>
-        <div class="arch-arrow glow"></div>
-        <div class="arch-node highlight">
-          <div class="arch-icon">💾</div>
-          <div class="arch-micro">KV Cache Store</div>
-          <div class="arch-label">Your Infra</div>
-        </div>
-        <div class="arch-arrow dim"></div>
-        <div class="arch-node">
-          <div class="arch-icon">💬</div>
-          <div class="arch-micro">Decode Only</div>
-          <div class="arch-label">User Query</div>
-        </div>
-        <div class="arch-arrow dim"></div>
-        <div class="arch-node">
-          <div class="arch-icon">✦</div>
-          <div class="arch-micro">Response</div>
-          <div class="arch-label">Fast &amp; Cheap</div>
-        </div>
-      </div>
-      <div class="arch-meta">
-        <div>
-          <div class="arch-meta-key">Trigger</div>
-          <div class="arch-meta-val">Document create or update event</div>
-        </div>
-        <div>
-          <div class="arch-meta-key">Cache invalidation</div>
-          <div class="arch-meta-val">Only when document or model changes</div>
-        </div>
-        <div>
-          <div class="arch-meta-key">Access control</div>
-          <div class="arch-meta-val">Inherited from source document ACL</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- USE CASES -->
-<div id="usecases" class="full-bleed">
-  <div class="section-inner">
-    <div class="sec-label">Use Cases</div>
-    <h2 class="sec-title">Built for document-heavy industries.</h2>
-    <p class="sec-sub">Companies whose document corpus is stable and repeatedly queried see the highest ROI — where prefill-once translates directly to predictable, shrinking unit costs.</p>
-
-    <div class="usecase-grid">
-      <div class="uc-card">
-        <div class="uc-industry">Legal</div>
-        <h3>Law Firms &amp; Compliance</h3>
-        <p>Case files, contracts, and regulatory briefs queried by dozens of attorneys. Cache each document once, serve thousands of queries — with document-level ACL enforced on every cache access.</p>
-        <div class="uc-metric">→ 70–90% reduction in per-query prefill cost</div>
-      </div>
-      <div class="uc-card">
-        <div class="uc-industry">Healthcare</div>
-        <h3>Hospitals &amp; Clinical Systems</h3>
-        <p>Patient records in EHR systems queried across departments. The KV cache stays within your HIPAA perimeter. PHI is never processed by external APIs after the initial on-prem prefill.</p>
-        <div class="uc-metric">→ Zero data egress after first prefill</div>
-      </div>
-      <div class="uc-card">
-        <div class="uc-industry">Semiconductors</div>
-        <h3>Hardware &amp; Datasheet-Driven R&amp;D</h3>
-        <p>Thousands of datasheets, design specs, and technical errata queried daily by engineers. Prefill the corpus once — engineers query fast without re-processing 500-page PDFs every time.</p>
-        <div class="uc-metric">→ Prefill once per spec version, not per query</div>
-      </div>
-      <div class="uc-card">
-        <div class="uc-industry">Fintech</div>
-        <h3>Financial Services &amp; Fintech</h3>
-        <p>Risk models, regulatory filings, and fund prospectuses queried by analysts. Per-document billing maps cleanly to fintech unit economics — a line item you can actually predict and budget.</p>
-        <div class="uc-metric">→ Predictable monthly AI spend</div>
-      </div>
-    </div>
-  </div>
-</div>
-
-<!-- PRICING -->
-<div id="pricing">
-  <div class="section-inner">
-    <div class="sec-label">Pricing Model</div>
-    <h2 class="sec-title">Pay per document,<br>not per query.</h2>
-
-    <div class="pricing-grid">
-      <div>
-        <div class="price-table">
-          <div class="price-table-header">Cost structure</div>
-          <div class="price-row"><span class="pl">Prefill (per document)</span><span class="pv">billed once</span></div>
-          <div class="price-row"><span class="pl">Re-prefill on doc update</span><span class="pv">billed on change</span></div>
-          <div class="price-row"><span class="pl">Re-prefill on model change</span><span class="pv">billed on change</span></div>
-          <div class="price-row"><span class="pl">Decode (per query)</span><span class="pv">query tokens only</span></div>
-          <div class="price-row"><span class="pl">KV cache storage</span><span class="pv">your infra</span></div>
-          <div class="price-row"><span class="pl">Data egress to Minnesväv</span><span class="pv">$0 — stays local</span></div>
-        </div>
-      </div>
-      <ul class="pricing-points">
-        <li class="pp">
-          <div class="pp-icon">∑</div>
-          <div>
-            <div class="pp-title">Predictable by design</div>
-            <div class="pp-desc">Costs scale with your document corpus, not query volume. Finance teams can model AI spend for the first time — it's just a document count.</div>
-          </div>
-        </li>
-        <li class="pp">
-          <div class="pp-icon">↻</div>
-          <div>
-            <div class="pp-title">Pay only on change</div>
-            <div class="pp-desc">Cache is rebuilt only when a document is updated or you switch model versions. A stable corpus pays once, period.</div>
-          </div>
-        </li>
-        <li class="pp">
-          <div class="pp-icon">⇌</div>
-          <div>
-            <div class="pp-title">Open and proprietary models both supported</div>
-            <div class="pp-desc">For open models, we cache the KV state. For proprietary APIs (Claude, GPT-4), we cache document-level query trees — same document-first guarantee, different mechanism.</div>
-          </div>
-        </li>
-        <li class="pp">
-          <div class="pp-icon">⊛</div>
-          <div>
-            <div class="pp-title">Low-cost inference hardware</div>
-            <div class="pp-desc">Works with cost-efficient inference engines — no dependency on expensive NVIDIA GPU clusters. Use commodity hardware or your existing on-prem investment.</div>
-          </div>
-        </li>
+    <div class="builton reveal">
+      <span class="lbl">Built on, not against</span>
+      <ul>
+        <li>NVIDIA Dynamo</li>
+        <li>LMCache</li>
+        <li>NIXL</li>
+        <li>vLLM</li>
+        <li>SGLang</li>
       </ul>
     </div>
   </div>
-</div>
+</section>
+
+<!-- WHO IT'S FOR -->
+<section id="who">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="eyebrow">Who it's for</div>
+      <h2 class="section-title">Everyone who serves models <em>at scale.</em></h2>
+    </div>
+    <div class="usecase-grid">
+      <div class="ucard reveal">
+        <div class="k">Agent platforms</div>
+        <h3>Long runs, brutal failure math</h3>
+        <p>Ninety-minute autonomous runs with 100K+ tokens of context die on a single node fault.
+        Minnesväv makes the run continue — and gives your framework hooks for tool-call reconciliation.</p>
+        <div class="pull">“The agent finished the task. Nobody noticed a node had died.”</div>
+      </div>
+      <div class="ucard reveal">
+        <div class="k">Inference providers</div>
+        <h3>SLAs you can actually sign</h3>
+        <p>Session-level continuity and state-layer diagnosis turn p99 mysteries into attributed
+        causes — and failed-request refunds into a line item you retire.</p>
+        <div class="pull">“TTFT spiked because tenant X's burst evicted tier one. Now you know.”</div>
+      </div>
+      <div class="ucard reveal">
+        <div class="k">GPU clouds</div>
+        <h3>Sell spot at a premium</h3>
+        <p>Preemption becomes a drain-and-migrate, not an outage. Offer reliable spot inference
+        as a new SKU — priced above raw spot, still far below on-demand.</p>
+        <div class="pull">“Higher utilization on hardware you already own.”</div>
+      </div>
+      <div class="ucard reveal">
+        <div class="k">Regulated enterprise</div>
+        <h3>On-prem, ACL-aware, air-gapped</h3>
+        <p>Document caches inherit your DMS permissions, invalidate when documents change, and
+        never leave your perimeter. Production behaves like the demo — at 5pm on month-end.</p>
+        <div class="pull">“Same cost, same latency, no matter how many people are querying.”</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- OSS -->
+<section id="oss" class="oss">
+  <div class="section-inner oss-flex">
+    <div class="oss-left reveal">
+      <div class="eyebrow">Open source first</div>
+      <h2 class="section-title">Kill a node. <em>Watch it not matter.</em></h2>
+      <p class="section-lede">The resumability plugin for vLLM ships free and open source, with the
+      chaos suite we test it with. Run the kill-and-recover demo on your own fleet in an afternoon —
+      then decide if the platform is worth talking about.</p>
+    </div>
+    <div class="oss-code reveal">
+      <div><span class="c"># protect a vLLM fleet</span></div>
+      <div>$ vav install --engine vllm --policy intra-domain</div>
+      <div><span class="c"># prove it</span></div>
+      <div>$ vav chaos kill-node gpu-07 --expect-resume</div>
+      <div><span class="a">✓ 312 sessions fenced, rehydrated, resumed</span></div>
+      <div><span class="a">✓ p99 resume 3.4s · tokens recomputed: 0</span></div>
+      <div><span class="c"># see why anything was ever slow</span></div>
+      <div>$ vav session inspect 9f2c --attribute-latency</div>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section id="pricing">
+  <div class="section-inner">
+    <div class="reveal">
+      <div class="eyebrow">Pricing</div>
+      <h2 class="section-title">Land free. Scale <em>per GPU.</em></h2>
+    </div>
+    <div class="pricing-grid">
+      <div class="price reveal">
+        <div class="k">Open source</div>
+        <h3>Resume plugin</h3>
+        <div class="amt">free, forever</div>
+        <p>Session resumability for vLLM in a single failure domain, the resume-correctness oracle,
+        and the chaos CLI. Apache-2.0. Run it on anything.</p>
+        <a class="btn-ghost" href="#access">Get the plugin</a>
+      </div>
+      <div class="price hot reveal">
+        <div class="k">Platform</div>
+        <h3>Fleet reliability</h3>
+        <div class="amt">per GPU / month</div>
+        <p>Cross-domain protection, graceful spot drain, state-layer observability with latency
+        attribution, multi-tenant fencing and encryption, predictive cache orchestration, SLAs.</p>
+        <a class="btn-primary" href="#access">Talk to us</a>
+      </div>
+      <div class="price reveal">
+        <div class="k">GPU clouds</div>
+        <h3>Reliable-spot program</h3>
+        <div class="amt">revenue share</div>
+        <p>Launch a reliable spot inference tier on your existing capacity. We integrate,
+        you price the SKU, we share the uplift. Zero engineering lift on your side.</p>
+        <a class="btn-ghost" href="#access">Partner with us</a>
+      </div>
+    </div>
+  </div>
+</section>
 
 <!-- CTA -->
-<div class="cta-band" id="waitlist">
-  <div class="sec-label" style="display: inline-block; margin-bottom: 1.5rem;">Early Access</div>
-  <h2>Your memory should stay<br>where your documents live.</h2>
-  <p>Minnesväv is in private beta with select design partners in legal, healthcare, and semiconductors. Join the waitlist to get early access and shape the roadmap.</p>
-  <div class="waitlist-row">
-    <input type="email" class="waitlist-input" placeholder="you@company.com" id="email-input">
-    <button class="btn-cta" onclick="handleWaitlist()">Request Access</button>
+<section id="access" class="cta-band">
+  <h2 class="reveal">Inference that <em>survives.</em></h2>
+  <p class="reveal">We're onboarding ten design partners — agent platforms, inference providers,
+  and GPU clouds — ahead of the open-source release. Bring a fleet and a failure story.</p>
+  <div class="hero-ctas reveal">
+    <a class="btn-primary" href="mailto:hello@minnesvav.io">hello@minnesvav.io</a>
+    <a class="btn-ghost" href="mailto:hello@minnesvav.io?subject=Chaos%20suite%20early%20access">Request chaos-suite access</a>
   </div>
-</div>
+</section>
 
-<!-- FOOTER -->
 <footer>
-  <div class="footer-l">© 2026 Minnesväv — Memory Woven Local</div>
-  <div class="footer-r">minnesväv.ai</div>
+  <div class="footer-l">© 2026 Minnesväv — minnesvav.io</div>
+  <div class="footer-r">minne som överlever — memory that survives</div>
 </footer>
 
 <script>
-// ———————————————————————————————————————
-// WOVEN MEMORY CANVAS
-// ———————————————————————————————————————
-(function() {
-  const canvas = document.getElementById('weave');
-  const ctx    = canvas.getContext('2d');
+(function () {
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-  const COLS = 30, ROWS = 20;
-  let W, H, pts = [], t = 0, raf;
+  /* ——— nav ink + reveals ——— */
+  var nav = document.getElementById('nav');
+  var hero = document.querySelector('.hero');
+  new IntersectionObserver(function (e) {
+    nav.classList.toggle('ink', !e[0].isIntersecting);
+  }, { rootMargin: '-80px 0px 0px 0px' }).observe(hero);
+
+  var rev = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) { if (en.isIntersecting) { en.target.classList.add('in'); rev.unobserve(en.target); } });
+  }, { threshold: 0.15 });
+  document.querySelectorAll('.reveal').forEach(function (el) { rev.observe(el); });
+
+  /* ——— terminal loop ——— */
+  var lines = [
+    ['dim', '$ watch fleet — 64 nodes · 6,212 active sessions'],
+    ['',    '$ vav chaos kill-node gpu-decode-07'],
+    ['bad', '✗ gpu-decode-07 lost · 312 sessions affected'],
+    ['p',   '→ fenced epoch++ · replicas located on buddy ring'],
+    ['p',   '→ rehydrating 312 block tables over NIXL …'],
+    ['ok',  '✓ all sessions resumed · p99 3.4s · tokens recomputed: 0'],
+    ['dim', '$ client connections dropped: 0'],
+  ];
+  var body = document.getElementById('termBody');
+  function renderTerm(upTo, partial) {
+    var html = '';
+    for (var i = 0; i < upTo; i++) {
+      var cls = lines[i][0] ? ' class="' + lines[i][0] + '"' : '';
+      html += '<div' + cls + '>' + lines[i][1] + '</div>';
+    }
+    if (partial !== undefined) {
+      var cls2 = lines[upTo][0] ? ' class="' + lines[upTo][0] + '"' : '';
+      html += '<div' + cls2 + '>' + lines[upTo][1].slice(0, partial) + '<span class="caret"></span></div>';
+    }
+    body.innerHTML = html;
+  }
+  if (reduced) { renderTerm(lines.length); }
+  else {
+    var li = 0, ch = 0;
+    (function tick() {
+      if (li >= lines.length) { renderTerm(lines.length); setTimeout(function () { li = 0; ch = 0; tick(); }, 9000); return; }
+      ch += 2;
+      if (ch >= lines[li].length && ch >= lines[li][1].length) { renderTerm(li + 1); li++; ch = 0; setTimeout(tick, lines[li - 1][0] === 'p' ? 420 : 650); }
+      else { renderTerm(li, ch); setTimeout(tick, 18); }
+    })();
+  }
+
+  /* ——— hero weave: monochrome threads; failures re-weave in mint ——— */
+  var cv = document.getElementById('weave'), ctx = cv.getContext('2d');
+  var W, H, threads = [], NT = 9, t0 = performance.now();
+  var heal = null; // active failure/heal event
 
   function resize() {
-    W = canvas.offsetWidth;
-    H = canvas.offsetHeight;
-    canvas.width  = W * devicePixelRatio;
-    canvas.height = H * devicePixelRatio;
-    ctx.scale(devicePixelRatio, devicePixelRatio);
-    buildGrid();
-  }
-
-  function buildGrid() {
-    pts = [];
-    const sx = W / (COLS - 1);
-    const sy = H / (ROWS - 1);
-    for (let r = 0; r < ROWS; r++) {
-      for (let c = 0; c < COLS; c++) {
-        pts.push({
-          bx: c * sx,
-          by: r * sy,
-          phase : Math.random() * Math.PI * 2,
-          freq  : 0.28 + Math.random() * 0.38,
-          amp   : 8 + Math.random() * 8,
-        });
-      }
+    W = cv.clientWidth; H = cv.clientHeight;
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    cv.width = W * dpr; cv.height = H * dpr; ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    threads = [];
+    for (var i = 0; i < NT; i++) {
+      threads.push({
+        y: H * (0.16 + 0.72 * i / (NT - 1)),
+        amp: 6 + Math.random() * 12,
+        f: 0.0016 + Math.random() * 0.0014,        // gentle wavelength
+        ph: Math.random() * Math.PI * 2,
+        sp: 0.00018 + Math.random() * 0.00022,     // slow drift, rad per ms (no *1000)
+        a: 0.05 + Math.random() * 0.07
+      });
     }
   }
+  resize(); window.addEventListener('resize', resize);
 
-  function pos(i) {
-    const p  = pts[i];
-    const dx = Math.sin(t * p.freq        + p.phase) * p.amp;
-    const dy = Math.cos(t * p.freq * 0.72 + p.phase * 1.3) * p.amp;
-    return { x: p.bx + dx, y: p.by + dy };
+  // slow, smooth vertical position of a thread at x and time t (ms)
+  function yAt(th, x, t) { return th.y + Math.sin(x * th.f + th.ph + t * th.sp) * th.amp; }
+
+  // smoothstep easing
+  function ease(u) { u = u < 0 ? 0 : u > 1 ? 1 : u; return u * u * (3 - 2 * u); }
+  // opens to 1 by inEnd, holds, closes back to 0 from outStart..1 — so grey re-knits as mint fades
+  function bump(e, inEnd, outStart) {
+    if (e < inEnd) return ease(e / inEnd);
+    if (e < outStart) return 1;
+    return 1 - ease((e - outStart) / (1 - outStart));
+  }
+  // point on a quadratic bezier
+  function qpt(p1, cp, p2, u) {
+    var m = 1 - u;
+    return {
+      x: m * m * p1.x + 2 * m * u * cp.x + u * u * p2.x,
+      y: m * m * p1.y + 2 * m * u * cp.y + u * u * p2.y
+    };
   }
 
-  function draw() {
+  function newHeal(t) {
+    var ti = 1 + Math.floor(Math.random() * (NT - 2));
+    heal = {
+      ti: ti,
+      nb: ti + (Math.random() < 0.5 ? -1 : 1),
+      x: W * (0.3 + Math.random() * 0.45),
+      gap: 70 + Math.random() * 50,
+      start: t, dur: 4600
+    };
+  }
+
+  // draw one thread as a smooth path, optionally skipping a clean centre gap
+  function strokeThread(th, t, gapX, gapHalf) {
+    ctx.lineWidth = 1; ctx.strokeStyle = 'rgba(240,237,230,' + th.a + ')';
+    var step = 6, started = false;
+    ctx.beginPath();
+    for (var x = -12; x <= W + 12; x += step) {
+      if (gapHalf > 0 && Math.abs(x - gapX) < gapHalf) {
+        if (started) { ctx.stroke(); started = false; } // close left segment cleanly
+        continue;
+      }
+      var y = yAt(th, x, t);
+      if (!started) { ctx.beginPath(); ctx.moveTo(x, y); started = true; }
+      else ctx.lineTo(x, y);
+    }
+    if (started) ctx.stroke();
+  }
+
+  function draw(t) {
     ctx.clearRect(0, 0, W, H);
+    var e = heal ? (t - heal.start) / heal.dur : -1; // 0..1 event progress
+    var brokenIdx = (heal && e >= 0 && e < 1) ? heal.ti : -1;
+    var gapHalf = brokenIdx >= 0 ? heal.gap * bump(e, 0.16, 0.8) : 0;
 
-    // deep radial bg
-    const g = ctx.createRadialGradient(W * 0.3, H * 0.45, 0, W * 0.5, H * 0.5, W * 0.75);
-    g.addColorStop(0,   'rgba(4, 28, 44, 0.97)');
-    g.addColorStop(0.5, 'rgba(7, 11, 24, 0.98)');
-    g.addColorStop(1,   'rgba(7, 11, 24, 1)');
-    ctx.fillStyle = g;
-    ctx.fillRect(0, 0, W, H);
-
-    // horizontal threads
-    for (let r = 0; r < ROWS; r++) {
-      const accentH = (r % 4 === 0);
-      const alpha   = 0.06 + Math.sin(r / ROWS * Math.PI) * 0.1;
-      ctx.beginPath();
-      for (let c = 0; c < COLS; c++) {
-        const p = pos(r * COLS + c);
-        c === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
-      }
-      ctx.strokeStyle = accentH
-        ? `rgba(0, 232, 192, ${alpha * 2.2})`
-        : `rgba(139, 157, 232, ${alpha * 0.9})`;
-      ctx.lineWidth = accentH ? 0.9 : 0.45;
-      ctx.stroke();
+    for (var i = 0; i < NT; i++) {
+      strokeThread(threads[i], t, heal ? heal.x : 0, i === brokenIdx ? gapHalf : 0);
     }
 
-    // vertical threads
-    for (let c = 0; c < COLS; c++) {
-      const accentV = (c % 5 === 0);
-      const alpha   = 0.04 + Math.sin(c / COLS * Math.PI) * 0.07;
-      ctx.beginPath();
-      for (let r = 0; r < ROWS; r++) {
-        const p = pos(r * COLS + c);
-        r === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y);
-      }
-      ctx.strokeStyle = accentV
-        ? `rgba(0, 232, 192, ${alpha * 1.8})`
-        : `rgba(100, 120, 200, ${alpha})`;
-      ctx.lineWidth = accentV ? 0.7 : 0.3;
-      ctx.stroke();
-    }
+    if (brokenIdx >= 0) {
+      var a = threads[heal.ti], b = threads[heal.nb];
+      var p1 = { x: heal.x - heal.gap, y: yAt(a, heal.x - heal.gap, t) };
+      var p2 = { x: heal.x + heal.gap, y: yAt(a, heal.x + heal.gap, t) };
+      var cp = { x: heal.x, y: yAt(b, heal.x, t) };          // bow toward neighbour thread
+      var reveal = ease((e - 0.16) / 0.5);                    // fixed-shape draw-in along u
+      var fade = e > 0.82 ? 1 - ease((e - 0.82) / 0.18) : 1;  // fade out as grey re-knits
 
-    // intersection glows (KV nodes)
-    for (let r = 0; r < ROWS; r += 3) {
-      for (let c = 0; c < COLS; c += 4) {
-        const p = pos(r * COLS + c);
-        const pulse = (Math.sin(t * 1.8 + c * 0.6 + r * 0.9) + 1) * 0.5;
+      // severed-node marker, fades over the first third
+      if (e < 0.4) {
         ctx.beginPath();
-        ctx.arc(p.x, p.y, 1.4 + pulse * 2.2, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(0, 232, 192, ${0.12 + pulse * 0.28})`;
+        ctx.arc(heal.x, yAt(a, heal.x, t), 3, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(232,106,90,' + (0.8 * (1 - e / 0.4)) + ')';
         ctx.fill();
       }
+
+      if (reveal > 0 && fade > 0) {
+        ctx.beginPath();
+        var N = 60, last = Math.floor(N * reveal);
+        for (var s = 0; s <= last; s++) {
+          var pt = qpt(p1, cp, p2, s / N);
+          if (s === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+        }
+        ctx.strokeStyle = 'rgba(0,232,192,' + (0.85 * fade) + ')';
+        ctx.lineWidth = 1.6;
+        ctx.shadowColor = 'rgba(0,232,192,0.55)'; ctx.shadowBlur = 7;
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+
+        // pulse travelling along the same fixed curve while it is live
+        if (reveal > 0.25 && fade === 1) {
+          var u2 = ((t - heal.start) / 900) % 1;
+          if (u2 <= reveal) {
+            var pp = qpt(p1, cp, p2, u2);
+            ctx.beginPath(); ctx.arc(pp.x, pp.y, 2.3, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(0,232,192,0.9)'; ctx.fill();
+          }
+        }
+      }
     }
 
-    // edge vignette
-    const vig = ctx.createRadialGradient(W/2, H/2, H * 0.28, W/2, H/2, H * 0.95);
-    vig.addColorStop(0, 'rgba(7,11,24,0)');
-    vig.addColorStop(1, 'rgba(7,11,24,0.88)');
-    ctx.fillStyle = vig;
-    ctx.fillRect(0, 0, W, H);
-
-    // bottom fade
-    const fade = ctx.createLinearGradient(0, H * 0.55, 0, H);
-    fade.addColorStop(0, 'rgba(7,11,24,0)');
-    fade.addColorStop(1, 'rgba(7,11,24,0.96)');
-    ctx.fillStyle = fade;
-    ctx.fillRect(0, 0, W, H);
-
-    t += 0.007;
-    raf = requestAnimationFrame(draw);
+    if (heal && e >= 1) heal = null;
+    if (!heal && Math.random() < 0.004) newHeal(t);
   }
 
-  window.addEventListener('resize', () => {
-    cancelAnimationFrame(raf);
-    resize();
-    draw();
-  });
-
-  resize();
-  draw();
+  if (reduced) {
+    draw(0); // single static frame, no failure event
+  } else {
+    (function loop(t) { draw(t); requestAnimationFrame(loop); })(t0);
+  }
 })();
-
-// ———————————————————————————————————————
-// WAITLIST
-// ———————————————————————————————————————
-function handleWaitlist() {
-  const input = document.getElementById('email-input');
-  const val   = input.value.trim();
-  if (!val || !val.includes('@') || !val.includes('.')) {
-    input.style.borderColor = 'rgba(220,80,80,0.6)';
-    input.focus();
-    return;
-  }
-  input.style.borderColor = 'var(--accent-border)';
-  input.value      = '';
-  input.placeholder = "You're on the list — we'll be in touch.";
-  input.disabled   = true;
-}
-
-// ———————————————————————————————————————
-// INTERSECTION OBSERVER — subtle reveal
-// ———————————————————————————————————————
-const obs = new IntersectionObserver(entries => {
-  entries.forEach(e => {
-    if (e.isIntersecting) {
-      e.target.style.opacity  = '1';
-      e.target.style.transform = 'translateY(0)';
-    }
-  });
-}, { threshold: 0.12 });
-
-document.querySelectorAll('.problem-card, .step, .uc-card, .pp, .arch-node').forEach(el => {
-  el.style.opacity   = '0';
-  el.style.transform = 'translateY(16px)';
-  el.style.transition = 'opacity 0.55s ease, transform 0.55s ease';
-  obs.observe(el);
-});
 </script>
 </body>
 </html>
